@@ -14,7 +14,9 @@ const loginSchema = z.object({
 })
 
 const googleSchema = z.object({
-  idToken: z.string().min(1),
+  code: z.string().min(1),
+  codeVerifier: z.string().min(1),
+  redirectUri: z.string().min(1),
 })
 
 export async function register(request: FastifyRequest, reply: FastifyReply) {
@@ -39,8 +41,8 @@ export async function login(request: FastifyRequest, reply: FastifyReply) {
 }
 
 export async function googleAuth(request: FastifyRequest, reply: FastifyReply) {
-  const { idToken } = googleSchema.parse(request.body)
-  const user = await authService.loginWithGoogle(idToken)
+  const body = googleSchema.parse(request.body)
+  const user = await authService.googleAuth(body)
 
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
   const token = await reply.jwtSign(
