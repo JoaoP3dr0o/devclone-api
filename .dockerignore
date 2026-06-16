@@ -1,0 +1,9 @@
+node_modules
+dist
+.env
+.env.production
+*.log
+.DS_Store
+docker-compose.yml
+docker-compose.prod.yml
+PROMPT.md
