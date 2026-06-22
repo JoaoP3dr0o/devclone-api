@@ -22,7 +22,16 @@ const googleSchema = z.object({
 export async function register(request: FastifyRequest, reply: FastifyReply) {
   const body = registerSchema.parse(request.body)
   const user = await authService.registerWithEmailPassword(body)
-  reply.status(201).send({ user })
+
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  const token = await reply.jwtSign(
+    { sub: user.id, email: user.email },
+    { expiresIn: '7d' },
+  )
+
+  await authService.createSession(user.id, token, expiresAt)
+
+  reply.status(201).send({ token, user })
 }
 
 export async function login(request: FastifyRequest, reply: FastifyReply) {
