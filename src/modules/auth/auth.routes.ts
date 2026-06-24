@@ -8,4 +8,6 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/auth/google', authController.googleAuth)
   app.post('/auth/refresh', { preHandler: [authenticate] }, authController.refresh)
   app.delete('/auth/logout', { preHandler: [authenticate] }, authController.logout)
+  app.post('/auth/forgot-password', authController.forgotPassword)
+  app.post('/auth/reset-password', authController.resetPassword)
 }

@@ -9,6 +9,7 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
+  RESEND_API_KEY: z.string().min(1),
   PORT: z.coerce.number().default(3333),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 })

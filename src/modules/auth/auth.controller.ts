@@ -1,6 +1,10 @@
+import { randomBytes } from 'crypto'
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { z } from 'zod'
+import { prisma } from '../../database/prisma'
+import { sendPasswordResetEmail } from '../../services/email.service'
 import * as authService from './auth.service'
+import bcrypt from 'bcryptjs'
 
 const registerSchema = z.object({
   name: z.string().min(1),
@@ -83,4 +87,53 @@ export async function logout(request: FastifyRequest, reply: FastifyReply) {
     await authService.invalidateSession(token)
   }
   reply.status(204).send()
+}
+
+export async function forgotPassword(request: FastifyRequest, reply: FastifyReply) {
+  const { email } = z.object({ email: z.string().email() }).parse(request.body)
+
+  const user = await prisma.user.findUnique({ where: { email } })
+
+  if (!user) return reply.send({ message: 'Se este email existir, você receberá as instruções.' })
+
+  const token = randomBytes(32).toString('hex')
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000)
+
+  await prisma.passwordResetToken.create({
+    data: { token, userId: user.id, expiresAt },
+  })
+
+  await sendPasswordResetEmail(user.email, token)
+
+  reply.send({ message: 'Se este email existir, você receberá as instruções.' })
+}
+
+export async function resetPassword(request: FastifyRequest, reply: FastifyReply) {
+  const { token, newPassword } = z
+    .object({ token: z.string(), newPassword: z.string().min(6) })
+    .parse(request.body)
+
+  const resetToken = await prisma.passwordResetToken.findUnique({
+    where: { token },
+    include: { user: true },
+  })
+
+  if (!resetToken || resetToken.usedAt || resetToken.expiresAt < new Date()) {
+    return reply.status(400).send({ message: 'Token inválido ou expirado.' })
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 12)
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: resetToken.userId },
+      data: { passwordHash },
+    }),
+    prisma.passwordResetToken.update({
+      where: { id: resetToken.id },
+      data: { usedAt: new Date() },
+    }),
+  ])
+
+  reply.send({ message: 'Senha alterada com sucesso.' })
 }

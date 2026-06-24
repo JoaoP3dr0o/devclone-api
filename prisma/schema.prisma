@@ -16,8 +16,9 @@ model User {
   googleId      String?   @unique
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  profiles      Profile[]
-  sessions      Session[]
+  profiles             Profile[]
+  sessions             Session[]
+  passwordResetTokens  PasswordResetToken[]
 }
 
 model Profile {
@@ -38,4 +39,14 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 }
