@@ -14,11 +14,16 @@
 - CRUD completo de perfis isolados por usuário
 - `GET /health` → `{ status: "ok" }`
 - Migrations rodando automaticamente no start via Dockerfile
+- `POST /auth/forgot-password` → gera token, envia email via Resend
+- `POST /auth/reset-password` → valida token, atualiza senha
+- Email transacional via Resend com domínio `devclone.com.br` verificado
+- Deep link `devclone://reset-password?token=xxx` no corpo do email
+- Migration `PasswordResetToken` aplicada em produção
+- `RESEND_API_KEY` configurada no Coolify
 
 ## Pendente
 
 - **Google OAuth:** callback ainda tenta abrir `localhost:5173` em produção
-- **Recuperação de senha:** endpoint e email transacional não implementados
 
 ## Stack
 
